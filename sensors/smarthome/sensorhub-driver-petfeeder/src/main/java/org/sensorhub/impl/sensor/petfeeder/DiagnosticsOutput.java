@@ -48,7 +48,7 @@ public class DiagnosticsOutput extends AbstractSensorOutput<PetFeederSensor> {
                 .definition(SWEHelper.getPropertyUri("ReceivedSignalStrengthIndicator"))
                 .label("WiFi RSSI")
                 .description("WiFi received signal strength of the ESP-12F")
-                .uomCode("dBm"))
+                .uomCode("dB[mW]"))
             .addField("ip", fac.createText()
                 .definition(SWEHelper.getPropertyUri("NetworkAddress"))
                 .label("IP Address")

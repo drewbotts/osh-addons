@@ -55,25 +55,25 @@ public class PetFeederSensor extends AbstractSensorModule<PetFeederConfig> {
 
         // Wire outputs
         feedingEventOutput = new FeedingEventOutput(this);
-        addOutput(feedingEventOutput, false);
         feedingEventOutput.init();
+        addOutput(feedingEventOutput, false);
 
         feederStatusOutput = new FeederStatusOutput(this);
-        addOutput(feederStatusOutput, false);
         feederStatusOutput.init();
+        addOutput(feederStatusOutput, false);
 
         diagnosticsOutput = new DiagnosticsOutput(this);
-        addOutput(diagnosticsOutput, false);
         diagnosticsOutput.init();
+        addOutput(diagnosticsOutput, false);
 
         // Wire control
         feedingCommandControl = new FeedingCommandControl(this);
-        addControlInput(feedingCommandControl);
         feedingCommandControl.init();
+        addControlInput(feedingCommandControl);
     }
 
     @Override
-    public void start() throws SensorHubException {
+    protected void doStart() throws SensorHubException {
         try {
             String brokerUri = "tcp://" + config.brokerHost + ":" + config.brokerPort;
             mqttClient = new MqttClient(brokerUri, config.clientId);
@@ -105,27 +105,37 @@ public class PetFeederSensor extends AbstractSensorModule<PetFeederConfig> {
                 }
             });
 
-            mqttClient.connect(opts);
-            getLogger().info("Connected to MQTT broker at {}", brokerUri);
+            // connect() and subscribe() are blocking calls on the synchronous MqttClient;
+            // running them in a daemon thread lets start() return so OSH can mark the
+            // module as Started while the broker handshake completes in the background.
+            Thread connectThread = new Thread(() -> {
+                try {
+                    mqttClient.connect(opts);
+                    getLogger().info("Connected to MQTT broker at {}", brokerUri);
 
-            // Subscribe to all ESP-published topics
-            String p = config.topicPrefix;
-            mqttClient.subscribe(p + "/status");
-            mqttClient.subscribe(p + "/availability");
-            mqttClient.subscribe(p + "/portion_size");
-            mqttClient.subscribe(p + "/rssi");
-            mqttClient.subscribe(p + "/ip");
-            mqttClient.subscribe(p + "/playStatus");
+                    String p = config.topicPrefix;
+                    mqttClient.subscribe(p + "/status");
+                    mqttClient.subscribe(p + "/availability");
+                    mqttClient.subscribe(p + "/portion_size");
+                    mqttClient.subscribe(p + "/rssi");
+                    mqttClient.subscribe(p + "/ip");
+                    mqttClient.subscribe(p + "/playStatus");
 
-            getLogger().info("Subscribed to feeder topics under prefix '{}'", p);
+                    getLogger().info("Subscribed to feeder topics under prefix '{}'", p);
+                } catch (MqttException e) {
+                    getLogger().error("Failed to connect/subscribe to MQTT broker", e);
+                }
+            }, "petfeeder-mqtt");
+            connectThread.setDaemon(true);
+            connectThread.start();
 
         } catch (MqttException e) {
-            throw new SensorHubException("Failed to connect to MQTT broker", e);
+            throw new SensorHubException("Failed to create MQTT client", e);
         }
     }
 
     @Override
-    public void stop() throws SensorHubException {
+    protected void doStop() throws SensorHubException {
         try {
             if (mqttClient != null && mqttClient.isConnected()) {
                 mqttClient.disconnect();

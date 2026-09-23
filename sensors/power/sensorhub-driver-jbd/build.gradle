@@ -1,0 +1,17 @@
+description = 'JBD BMS Driver'
+ext.details = 'Driver for JBD/Xiaoxiang BMS via local MQTT bridge (BLE collector) or UART'
+version = '0.1.0'
+
+dependencies {
+  api project(':sensorhub-utils-power')
+  implementation 'org.sensorhub:sensorhub-core:' + oshCoreVersion
+  implementation 'org.eclipse.paho:org.eclipse.paho.client.mqttv3:1.2.5'
+  // gson comes transitively from sensorhub-core (api dependency of swe-common-core)
+}
+
+osgi {
+  manifest {
+    attributes('Bundle-Vendor': 'Drew / GeoRobotix')
+    attributes('Bundle-Activator': 'org.sensorhub.impl.sensor.jbd.Activator')
+  }
+}

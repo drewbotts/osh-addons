@@ -1,0 +1,17 @@
+description = 'Victron VE.Direct Driver'
+ext.details = 'Driver for Victron SmartSolar MPPT and Phoenix inverter over VE.Direct serial'
+version = '0.1.0'
+
+dependencies {
+  api project(':sensorhub-utils-power')
+  implementation 'org.sensorhub:sensorhub-core:' + oshCoreVersion
+  // serial comm provider (RXTX) comes from the OSH node distribution;
+  // only the ICommProvider API is needed at compile time (in core)
+}
+
+osgi {
+  manifest {
+    attributes('Bundle-Vendor': 'Drew / GeoRobotix')
+    attributes('Bundle-Activator': 'org.sensorhub.impl.sensor.victron.Activator')
+  }
+}

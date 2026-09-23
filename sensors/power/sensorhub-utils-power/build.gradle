@@ -1,0 +1,7 @@
+description = 'Power Domain Utils'
+ext.details = 'Shared SWE Common helper, POJOs, and protocol parsers for battery/charger drivers'
+version = '0.1.0'
+
+dependencies {
+  api 'org.sensorhub:sensorhub-core:' + oshCoreVersion
+}
